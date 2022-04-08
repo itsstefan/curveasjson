@@ -4,7 +4,9 @@ This is a total hack but it works for my use case. I was looking for a fast way 
 
 ![](screenshot.png)
 
-The drawing area is 1440 pixels wide, representing the 24 * 60 = 1440 minutes of a day. The y-axis values range from 0 (at the very bottom) to 1000 (at the very top).
+The drawing area is 1440 pixels wide, representing the 24 * 60 = 1440 minutes of a day. The y-axis values range from 0 (at the very bottom) to 1000 (at the very top). 
+
+Points can be added via a single right click into the drawing area (points are always added at the end, which makes the whole thing hard to use from a certain complexity of the curve) and deleted via selecting a point and pressing `⌫` or `Del`.
 
 
 
