@@ -3,6 +3,15 @@
     <title>Curve As JSON</title>
     <script src="https://ajax.googleapis.com/ajax/libs/d3js/7.4.2/d3.min.js"></script>
     <style type="text/css">
+        * {
+            padding: 0px;
+            margin: 0px;
+            font-family: monospace;
+        }
+        body {
+            padding: 8px;
+            padding-top: 16px;
+        }
         #center {
             width: 1440px;
             margin: auto;
@@ -13,14 +22,37 @@
         #viz {
             border: 1px solid black;
         }
+        input {
+            width: 6rem;
+            text-align: right;
+            margin: 8px;
+            line-height: 2.2rem;
+        }
+        button {
+            padding: 8px;
+            margin: 8px;
+        }
     </style>
   </head>
   <body>    
   <div id="center">
     <svg tabindex="0" id="viz"></svg>
-  <button onclick="document.getElementById('output').innerHTML = createOutputFrom(points)">Create JSON</button><br>
-  <textarea style="resize: none; width: 1440px" id="output" rows="16"></textarea><br>
-  <button onclick="copyToClipboard()">Copy to clipboard</button>
+    <label for="ymin">ymin:</label>
+    <input type="number" id="ymin" value="0">
+    <label for="ymax">ymax:</label>
+    <input type="number" id="ymax" value="1000">
+    <label for="xmin">xmin:</label>
+    <input type="number" id="xmin" value="0">
+    <label for="xmax">xmax:</label>
+    <input type="number" id="xmax" value="1440">
+    <label for="xstep">xstep:</label>
+    <input type="number" id="xstep" value="1" min="1">
+    <button onclick="alert('todo')">Reset ymin/ymax/xmin/xmax/xtep</button>
+    <button onclick="location.reload()">Reset everything</button>
+    <button onclick="alert('todo')">Set Background</button>
+    <button onclick="document.getElementById('output').innerHTML = createOutputFrom(points)">Create JSON</button><br>
+    <textarea style="resize: none; width: 1440px" id="output" rows="12"></textarea><br>
+    <button onclick="copyToClipboard()">Copy to clipboard</button>
   </div>
 </body>
 </html>
@@ -32,8 +64,16 @@
     var viz = d3.select("#viz")
         .attr("width", 1440)
         .attr("height", 400)
+        .on("mousemove", updateCords)
         .on("mouseup", addPoint)
         .on("keydown", deletePoint);
+
+    viz.append("text")
+        .attr("x", 8)
+        .attr("y", 12)
+        .attr("id", "cords")
+        .attr("dy", ".35em")
+        .text("0 / 0");
 
     var w = 1440, h = 400;
 
@@ -53,6 +93,11 @@
         .curve(d3.curveMonotoneX);
 
     drawPoints();
+
+    function updateCords(event, d) {
+        d3.select("#cords").text(parseInt(event.x).toString() + " / " + parseInt(event.y).toString());
+        event.preventDefault();
+    }
 
     function drawPoints() {
 
@@ -74,7 +119,7 @@
             viz.append('circle')
                 .attr("class", "circle")
                 .style("stroke", "none")
-                .style("fill", ((selectedPoint == i) ? "red" : "black"))
+                .style("fill", ((selectedPoint == i) ? "grey" : "black"))
                 .attr("id", i)
                 .attr("r", 8)
                 .style("stroke-width", 100)
@@ -113,9 +158,9 @@
     function dragStart(event,d) {
         // make all other points black
         d3.selectAll("circle").style("fill", "black");
-        // make this point red
+        // make this point grey
         d3.select(this)
-          .style("fill", "red")
+          .style("fill", "grey")
         id = parseInt(d3.select(this).attr("id"));
         selectedPoint = id;
     }
@@ -158,6 +203,8 @@
         points[id].x = event.x;
         points[id].y = my(event.y);
         d3.select("#path").attr("d", PointGen(points));
+
+        updateCords(event, d);
     }
       
     function dragEnd(event,d){
@@ -171,10 +218,17 @@
         copyText.select();
         copyText.setSelectionRange(0, 99999);
         navigator.clipboard.writeText(copyText.value);
+        copyText.blur();
     }
 
     function createOutputFrom(points)
     {   
+        var ymin = parseInt(document.getElementById("ymin").value);
+        var ymax = parseInt(document.getElementById("ymax").value);
+        var xmin = parseInt(document.getElementById("xmin").value);
+        var xmax = parseInt(document.getElementById("xmax").value);
+        var xstep = parseInt(document.getElementById("xstep").value);
+
         var rv = "{\n";
         var p = [];
         for (var i = 0; i < 1440; i++) {
@@ -191,7 +245,7 @@
             p[x] = scaled_y;
         }
         var i = 0;
-        for (; i < 1439; i++) {
+        for (; i < 1439; i += xstep) {
             rv += "   \"" + i + "\":\"" + p[i] + "\",\n";
         }
         rv += "   \"" + i + "\":\"" + p[i] + "\"\n";
