@@ -9,7 +9,7 @@ The drawing area is 1440 pixels wide, representing the 24 * 60 = 1440 minutes of
 Points can be added via a single right click into the drawing area (points are always added at the end, which makes the whole thing hard to use from a certain complexity of the curve) and deleted via selecting a point and pressing `⌫` or `Del`.
 
 # Todo:
-- [ ] Make first and last point stick to edges
-- [ ] Click between points to add a point
-- [ ] Don't allow for points to cross another point (on the x-axis)
+- [x] Make first and last point stick to edges
+- [x] Click between points to add a point
+- [x] Don't allow for points to cross another point (on the x-axis)
 - [ ] Add options for x and y output scaling, output step-width, output offsets
