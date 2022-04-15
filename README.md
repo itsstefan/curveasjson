@@ -12,4 +12,5 @@ Points can be added via a single left-click into the drawing area and deleted vi
 - [x] Make first and last point stick to edges
 - [x] Click between points to add a point
 - [x] Don't allow for points to cross another point (on the x-axis)
-- [ ] Add options for x and y output scaling, output step-width, output offsets
+- [x] Add options for x and y output scaling, output step-width, output offsets
+- [ ] Cleanup
