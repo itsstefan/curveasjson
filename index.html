@@ -22,13 +22,18 @@
         #viz {
             border: 1px solid black;
         }
+        #params {
+            text-align: center;
+            padding: 0px;
+            margin: 0px;
+        }
         input {
             width: 6rem;
             text-align: right;
             margin: 8px;
             line-height: 2.2rem;
         }
-        button {
+        select, button {
             padding: 8px;
             margin: 8px;
         }
@@ -37,20 +42,28 @@
   <body>    
   <div id="center">
     <svg tabindex="0" id="viz"></svg>
-    <label for="ymin">ymin:</label>
-    <input type="number" id="ymin" value="0">
-    <label for="ymax">ymax:</label>
-    <input type="number" id="ymax" value="1000">
-    <label for="xmin">xmin:</label>
-    <input type="number" id="xmin" value="0">
-    <label for="xmax">xmax:</label>
-    <input type="number" id="xmax" value="1440">
-    <label for="xstep">xstep:</label>
-    <input type="number" id="xstep" value="1" min="1">
-    <button onclick="alert('todo')">Reset ymin/ymax/xmin/xmax/xtep</button>
-    <button onclick="location.reload()">Reset everything</button>
-    <button onclick="alert('todo')">Set Background</button>
-    <button onclick="document.getElementById('output').innerHTML = createOutputFrom(points)">Create JSON</button><br>
+
+    <div id="params">
+        <label for="ymin">ymin:</label>
+        <input type="number" onchange="ymin=parseInt(this.value)" id="ymin" value="0">
+        <label for="ymax">ymax:</label>
+        <input type="number" onchange="ymax=parseInt(this.value)" id="ymax" value="1000">
+        <label for="xmin">xmin:</label>
+        <input type="number" onchange="xmin=parseInt(this.value)" id="xmin" value="0">
+        <label for="xmax">xmax:</label>
+        <input type="number" onchange="xmax=parseInt(this.value)" id="xmax" value="1440">
+        <label for="xstep">xstep:</label>
+        <input type="number" onchange="xstep=parseInt(this.value)"  id="xstep" value="1" min="1">
+        <button onclick="resetScalingParams()">Reset scaling</button>
+        <button onclick="location.reload()">Reset everything</button>
+        <button onclick="alert('todo')">Set Background</button>
+        <label for="format">Format:</label>
+        <select name="format" id="format">
+            <option value="tab">Tabs</option>
+            <option value="json">JSON</option>
+        </select> 
+        <button onclick="document.getElementById('output').innerHTML = createOutputFrom(points)">Create</button><br>
+    </div>
     <textarea style="resize: none; width: 1440px" id="output" rows="12"></textarea><br>
     <button onclick="copyToClipboard()">Copy to clipboard</button>
   </div>
@@ -85,6 +98,12 @@
         { x: 1440, y: 100},
     ];
 
+    var ymin = parseInt(document.getElementById("ymin").value);
+    var ymax = parseInt(document.getElementById("ymax").value);
+    var xmin = parseInt(document.getElementById("xmin").value);
+    var xmax = parseInt(document.getElementById("xmax").value);
+    var xstep = parseInt(document.getElementById("xstep").value);
+
     selectedPoint = 1;
 
     var PointGen = d3.line()
@@ -95,7 +114,12 @@
     drawPoints();
 
     function updateCords(event, d) {
-        d3.select("#cords").text(parseInt(event.x).toString() + " / " + parseInt(event.y).toString());
+        let offset = document.getElementById("viz").getBoundingClientRect();
+        x = parseInt(event.x) - offset.left;
+        y = parseInt(event.y) - offset.top;
+        sx = scale_x(x);
+        sy = scale_y(y);
+        d3.select("#cords").text(/*x.toString() + " / " + y.toString() + " | " +*/ sx + " / " + sy);
         event.preventDefault();
     }
 
@@ -134,9 +158,12 @@
 
     function addPoint(event, d) {
         event.preventDefault();
+        let offset = document.getElementById("viz").getBoundingClientRect();
+        x = parseInt(event.x) - offset.left;
+        y = parseInt(event.y) - offset.top;
         for (var i = 0; i < points.length - 1; i += 1) {
-            if (event.x > points[i].x && event.x < points[i+1].x) {
-                points.splice(i+1, 0, { x: event.x, y: event.y });
+            if (x > points[i].x && x < points[i+1].x) {
+                points.splice(i+1, 0, { x: x, y: y });
                 drawPoints();
                 return;
             }
@@ -203,7 +230,6 @@
         points[id].x = event.x;
         points[id].y = my(event.y);
         d3.select("#path").attr("d", PointGen(points));
-
         updateCords(event, d);
     }
       
@@ -221,34 +247,57 @@
         copyText.blur();
     }
 
+    function resetScalingParams()
+    {
+        ymin = document.getElementById("ymin").value = 0;
+        ymax = document.getElementById("ymax").value = 1000;
+        xmin = document.getElementById("xmin").value = 0;
+        xmax = document.getElementById("xmax").value = 1440;
+        xtep = document.getElementById("xstep").value = 1;
+    }
+
+    function numericMap(current, in_min, in_max, out_min, out_max) 
+    {
+        current = Math.round(current);
+        in_min = Math.round(in_min);
+        in_max = Math.round(in_max);
+        out_min = Math.round(out_min);
+        out_max = Math.round(out_max);
+        var value = (current - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+        var rv =  Math.round(value);
+        return rv;
+    }
+
+    function scale_x(x)
+    {
+        return numericMap(x, 0, 1440, xmin, xmax);
+    }
+
+    function scale_y(y)
+    {
+        return numericMap(y, 400, 0, ymin, ymax);
+    }
+
     function createOutputFrom(points)
     {   
-        var ymin = parseInt(document.getElementById("ymin").value);
-        var ymax = parseInt(document.getElementById("ymax").value);
-        var xmin = parseInt(document.getElementById("xmin").value);
-        var xmax = parseInt(document.getElementById("xmax").value);
-        var xstep = parseInt(document.getElementById("xstep").value);
-
         var rv = "{\n";
-        var p = [];
-        for (var i = 0; i < 1440; i++) {
-            p[i] = 0;
-        }
+        var p = new Array(1440).fill(0);
+        // project to x-axis array
         length = path.getTotalLength();
-        // project to y (and normalize values from 1...400 to 1000...1 => 1000-2.5*value)
         for (var i = 0; i < length; i++) {
             point = path.getPointAtLength(i);
             x = parseInt(point.x);
-            y = parseInt(point.y);
-            scaled_y = Math.floor(1000 - 2.5*y);
-            // will sometimes overwrite but that's ok
-            p[x] = scaled_y;
+            y = parseInt(point.y);           
+            // might overwrite itself in border cases but that's ok
+            p[i] = scale_y(y);
         }
         var i = 0;
-        for (; i < 1439; i += xstep) {
-            rv += "   \"" + i + "\":\"" + p[i] + "\",\n";
+        for (; i < (1440-xstep); i += xstep) {
+            if (i < 1439) {
+                rv += "   \"" + scale_x(i) + "\":\"" + p[i] + "\",\n";
+            }
         }
-        rv += "   \"" + i + "\":\"" + p[i] + "\"\n";
+        rv += "   \"" + scale_x(i) + "\":\"" + p[i] + "\"\n";
         rv += '}'
         return rv;
     }
