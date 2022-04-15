@@ -1,4 +1,4 @@
-# curveasjson
+# curved
 
 This is a total hack but it works for my use case. I was looking for a fast way to synthesize a PV generation profile but only found rather complex tools on the web and  nothing that spits out data minute-wise. I made this little tool, it's just a single HTML file, where you modify a spline (in my case, to the shape of the generation curve) and, via a press on the `Create JSON` button, then generate minute-wise JSON data. 
 
